@@ -27,9 +27,18 @@ import java.io.File
 private fun EXT_TIPO(f: File) = mapOf("jpg" to Tipo.IMAGEN,"jpeg" to Tipo.IMAGEN,"png" to Tipo.IMAGEN,"mp4" to Tipo.VIDEO,"mp3" to Tipo.AUDIO,"m4a" to Tipo.AUDIO,"opus" to Tipo.AUDIO)[f.name.substringAfterLast('.').lowercase()]
 
 class MainActivity : ComponentActivity() {
-    override fun onCreate(s: Bundle?) {
+       override fun onCreate(s: Bundle?) {
         super.onCreate(s)
-        setContent { MaterialTheme { Pantalla() } }
+        val log = File(filesDir, "crash.txt")
+        val previo = log.takeIf { it.exists() }?.readText()
+        log.delete()
+        Thread.setDefaultUncaughtExceptionHandler { _, e ->
+            log.writeText(e.stackTraceToString())
+            android.os.Process.killProcess(android.os.Process.myPid())
+        }
+        setContent { MaterialTheme {
+            if (previo != null) Text(previo.take(1500), Modifier.padding(16.dp)) else Pantalla()
+        } }
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
